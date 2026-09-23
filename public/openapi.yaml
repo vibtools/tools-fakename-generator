@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: Fake Name & Identity Generator API - Vib Tools
+  description: API for generating realistic synthetic identities, mock user biodata, verified addresses, and test credit cards.
+  version: 1.0.0
+  contact:
+    name: Vib Tools
+    url: https://fakenamegenerator.vib.tools/
+servers:
+  - url: /api
+paths:
+  /generate:
+    get:
+      summary: Generate fake synthetic identity profiles
+      description: Returns one or more complete realistic synthetic profiles with full names, valid postal codes, test credit cards, phones, and biodata.
+      parameters:
+        - name: country
+          in: query
+          description: ISO 3166-1 alpha-2 country code (e.g. US, GB, CA, AU, DE, FR, BD, IN, JP)
+          schema:
+            type: string
+            default: US
+        - name: gender
+          in: query
+          description: Desired gender of generated profile
+          schema:
+            type: string
+            enum: [random, male, female]
+            default: random
+        - name: nameset
+          in: query
+          description: Localized name format
+          schema:
+            type: string
+            enum: [american, british, canadian, australian, german, french, spanish, italian, brazilian, bengali, indian, japanese]
+            default: american
+        - name: count
+          in: query
+          description: Number of identities to generate (1 to 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 1
+      responses:
+        '200':
+          description: Successful generation
+          content:
+            application/json:
+              schema:
+                type: object
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check the status of the Edge Cloudflare Pages Function.
+      responses:
+        '200':
+          description: System healthy

@@ -1,0 +1,18 @@
+{
+  "name": "Fake Name Generator - Vib Tools",
+  "short_name": "FakeNameGen",
+  "description": "Generate 100% realistic synthetic fake identities, verified street addresses, Luhn-valid test credit cards, and biodata.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://vibtools.github.io/vibtools-brand-assets/logos/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "developer", "productivity"]
+}

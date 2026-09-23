@@ -1,0 +1,134 @@
+import React, { useEffect } from 'react';
+import { FileCheck, ArrowLeft, ShieldAlert, CheckCircle2 } from 'lucide-react';
+
+interface TermsPageProps {
+  onBackToGenerator: () => void;
+  onOpenDisclaimer: () => void;
+}
+
+export const TermsPage: React.FC<TermsPageProps> = ({
+  onBackToGenerator,
+  onOpenDisclaimer
+}) => {
+  useEffect(() => {
+    document.title = "Terms & Conditions – Acceptable Use Policy | Vib Tools Fake Name Generator";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors">
+      
+      {/* Breadcrumb Header */}
+      <div className="sticky top-12 sm:top-13 z-30 border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 sm:px-6 py-2.5">
+        <div className="max-w-4xl mx-auto flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onBackToGenerator}
+              className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Generator</span>
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">/</span>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold">Terms &amp; Conditions</span>
+          </div>
+          <button
+            onClick={onBackToGenerator}
+            className="px-3 py-1 text-[11px] font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-all cursor-pointer shadow-2xs"
+          >
+            Launch Tool
+          </button>
+        </div>
+      </div>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+        
+        {/* Header */}
+        <header className="space-y-3 pb-6 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200/70 dark:border-blue-800 text-xs font-semibold">
+            <FileCheck className="w-3.5 h-3.5" />
+            <span>Acceptable Use &amp; Service Terms</span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Terms &amp; Conditions of Use
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Effective Date: September 23, 2026 · Published by Vib Tools
+          </p>
+        </header>
+
+        <article className="space-y-8 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              1. Acceptance of Terms
+            </h2>
+            <p>
+              By accessing and using Vib Tools Fake Name Generator (located at <code className="text-xs font-mono">fakenamegenerator.vib.tools</code>) or invoking our Edge REST API, you agree to be bound by these Terms &amp; Conditions. If you do not agree to these terms, please discontinue using this service.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              2. Permitted &amp; Intended Use Cases
+            </h2>
+            <p>
+              This utility is strictly provided for legitimate engineering, software development, quality assurance, research, education, and digital privacy purposes. Permitted uses include:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+              <li>Populating staging, development, and unit test databases (e.g., PostgreSQL, SQLite, MySQL).</li>
+              <li>Automating UI and E2E form testing using Playwright, Cypress, Selenium, or Puppeteer.</li>
+              <li>Simulating multi-region billing checkout flows with algorithmically valid Luhn card numbers.</li>
+              <li>Protecting personal privacy when testing public web forms, newsletters, or microtasks.</li>
+              <li>Creating character placeholders for fiction, novels, games, and screenwriting.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+              <ShieldAlert className="w-4 h-4" />
+              <span>3. Prohibited &amp; Unlawful Activities</span>
+            </h2>
+            <p>
+              You explicitly agree NOT to use the data generated by this tool for any illegal, fraudulent, or malicious purpose, including but not limited to:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+              <li>Attempting actual financial transactions, credit card fraud, or chargeback abuse.</li>
+              <li>Opening real bank accounts, government benefits, or credit lines with synthetic identities.</li>
+              <li>Impersonating real living individuals or committing identity theft.</li>
+              <li>Submitting fraudulent claims to insurance companies or judicial systems.</li>
+              <li>Distributing spam, phishing emails, or malicious software.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              4. Disclaimer of Warranties &amp; "As-Is" Service
+            </h2>
+            <p>
+              The tool and API are provided on an "as-is" and "as-available" basis without warranties of any kind. Vib Tools makes no guarantees regarding the uptime, accuracy, or suitability of generated data for specific business legal requirements. Please read our full{' '}
+              <button
+                type="button"
+                onClick={onOpenDisclaimer}
+                className="text-blue-600 dark:text-blue-400 font-semibold underline cursor-pointer"
+              >
+                Legal Disclaimer
+              </button>.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              5. Intellectual Property
+            </h2>
+            <p>
+              The Vib Tools brand, user interface design, logos, and custom algorithms are the intellectual property of Md Nurnobi and Vib Tools. The synthetic test data output generated is in the public domain and may be used freely in your proprietary software tests without attribution.
+            </p>
+          </section>
+
+        </article>
+
+      </main>
+    </div>
+  );
+};

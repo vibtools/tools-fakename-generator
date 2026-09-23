@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "fake_name_generator_vibtools",
+  "name_for_human": "Fake Name & Identity Generator",
+  "description_for_model": "Generate realistic synthetic identities, mock user biodata, verified addresses, Luhn-valid test credit cards, and localized names across 24 countries for QA testing, form filling, and dataset seeding.",
+  "description_for_human": "Generate 100% realistic fake identities, names, street addresses, credit cards, phones, and biodata for microjob tasks, QA testing, and form verification.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://vib.tools/openapi.yaml"
+  },
+  "logo_url": "https://vibtools.github.io/vibtools-brand-assets/logos/icon-512.png",
+  "contact_email": "teamdarkdevil24@gmail.com",
+  "legal_info_url": "https://vib.tools/"
+}

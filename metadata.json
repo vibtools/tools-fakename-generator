@@ -1,0 +1,6 @@
+{
+  "name": "Fake Name & Identity Generator",
+  "description": "Generate 100% realistic fake identities, names, street addresses, credit cards, phones, and biodata for microjob tasks, QA testing, and form verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

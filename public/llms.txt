@@ -1,0 +1,72 @@
+# Fake Name & Identity Generator - Vib Tools
+> Comprehensive realistic synthetic identity and biodata generation engine designed for QA testing, form verification, microtask workflows, and mock dataset creation.
+
+- Website: https://fakenamegenerator.vib.tools/
+- Brand: Vib Tools (Md Nurnobi / @victorsteele)
+- Parent Brand Website: https://vib.tools/
+- Knowledge file (full): https://fakenamegenerator.vib.tools/llms-full.txt
+- Edge API Base: /api/generate
+- Health Check: /api/health
+
+## Overview
+Fake Name & Identity Generator produces 100% synthetically valid mock biodata without using any real person's private identifiable information (PII). Every generated record is mathematically consistent:
+- Postal codes & street address formats match regional post office standards.
+- Test credit cards pass the Luhn algorithm checksum test (ISO/IEC 7812).
+- Phone numbers match standard telecom dial codes and area formats.
+- High-resolution synthetic profile photos provided via RandomUser CDN.
+
+## Key Features
+- **Instant Single Generation**: Generate full persona profiles including names, avatars, birthdays, zodiacs, addresses, geo-coordinates, emails, usernames, secure passwords, SSN/tax IDs, and employment history.
+- **Bulk CSV Exporter**: Generate between 10 and 100 complete identity records in downloadable CSV format for database seeding and automation testing.
+- **24 Supported Countries**: United States (US), United Kingdom (GB), Canada (CA), Australia (AU), Germany (DE), France (FR), Spain (ES), Switzerland (CH), Denmark (DK), Finland (FI), Ireland (IE), India (IN), Iran (IR), Mexico (MX), Netherlands (NL), Norway (NO), New Zealand (NZ), Serbia (RS), Turkey (TR), Ukraine (UA), Brazil (BR), Bangladesh (BD), Italy (IT), Japan (JP).
+- **12 Localized Namesets**: American, British, Canadian, Australian, German, French, Spanish, Italian, Brazilian, Bengali, Indian (Hindi), Japanese.
+- **Microjob QA Mode**: Verified zip-city combinations that pass automated address validation forms in microtask platforms (Remotasks, Appen, Clickworker, UserTesting, MTurk).
+- **1-Tap Field Copying**: Copy any single attribute (Street, City, Zip, Phone, SSN, Card) or copy entire biodata with a single tap.
+- **Offline & Edge Ready**: Runs completely in-browser with zero latency and deploys on Cloudflare Pages & Functions.
+
+## Cloudflare Edge API Endpoints
+- `GET /api/generate?country=US&gender=random&nameset=american&count=1`
+  Query parameters:
+  - `country` (e.g. US, GB, CA, AU, DE, FR, BD, IN, JP)
+  - `gender` (random, male, female)
+  - `nameset` (american, british, canadian, german, french, spanish, bengali, etc.)
+  - `count` (integer between 1 and 100)
+- `POST /api/generate` with JSON payload `{ country, gender, nameset, count, minAge, maxAge }`
+- `GET /api/health` returns edge status, timestamp, and Cloudflare colo.
+
+## Trust, Legal & Support Hubs
+- `https://fakenamegenerator.vib.tools/about` - About Vib Tools, Engineering Team & Mission
+- `https://fakenamegenerator.vib.tools/contact` - Contact Engineering Team, Support & Location
+- `https://fakenamegenerator.vib.tools/faq` - Comprehensive FAQ & Help Center
+- `https://fakenamegenerator.vib.tools/privacy` - Privacy Policy (GDPR / CCPA Zero-Retention)
+- `https://fakenamegenerator.vib.tools/terms` - Terms & Conditions of Acceptable Use
+- `https://fakenamegenerator.vib.tools/disclaimer` - Synthetic Data Legal Disclaimer & Non-Real Notice
+- `https://fakenamegenerator.vib.tools/cookies` - Cookie & LocalStorage Transparency Policy
+
+## Developer Documentation & Knowledge Hubs
+- `https://fakenamegenerator.vib.tools/docs` - Developer Documentation & API Hub
+- `https://fakenamegenerator.vib.tools/docs/getting-started` - Quickstart, Core Generator Features & Keyboard Shortcuts
+- `https://fakenamegenerator.vib.tools/docs/api-reference` - REST Edge API Reference & Code Examples
+- `https://fakenamegenerator.vib.tools/docs/tools-comparison-and-alternatives` - Top 8 Fake Name Generators & Synthetic Identity Tools Compared (2026)
+- `https://fakenamegenerator.vib.tools/docs/algorithms-and-validation` - Mathematical Algorithms (Luhn Mod 10, SSN Rules & Postal Regex)
+- `https://fakenamegenerator.vib.tools/docs/bulk-data-and-seeding` - Bulk CSV & Database Seeding (PostgreSQL, Prisma, MongoDB)
+- `https://fakenamegenerator.vib.tools/docs/qa-and-test-automation` - Automated E2E Testing with Playwright & Cypress
+- `https://fakenamegenerator.vib.tools/docs/microjob-and-survey-testing` - Microjob & Survey Testing Reference Guide
+- `https://fakenamegenerator.vib.tools/docs/privacy-and-gdpr-compliance` - Data Privacy Architecture & GDPR Compliance Standards
+
+## Engineering & QA Blog Guides
+- `https://fakenamegenerator.vib.tools/blog` - Engineering & QA Blog Directory
+- `https://fakenamegenerator.vib.tools/blog/best-fake-name-generator-alternatives-compared` - Top 7 Best Fake Name Generators in 2026: The Ultimate Alternatives to FakeNameGenerator.com
+- `https://fakenamegenerator.vib.tools/blog/luhn-algorithm-test-credit-cards` - Understanding the Luhn Algorithm (MOD 10) & Test Credit Cards
+- `https://fakenamegenerator.vib.tools/blog/fake-ssn-generator-rules-and-testing` - How Fake SSNs Work: US Social Security Number Format & Rules for Developers
+- `https://fakenamegenerator.vib.tools/blog/why-use-a-fake-name-legitimate-reasons` - 10 Legitimate Reasons to Use a Fake Name & Synthetic Persona Online
+- `https://fakenamegenerator.vib.tools/blog/microjob-form-filling-synthetic-identities` - The Complete Microjob Form-Filling Guide
+- `https://fakenamegenerator.vib.tools/blog/automated-form-testing-playwright-cypress` - Automated Form Testing with Cypress & Playwright Using Synthetic Personas
+- `https://fakenamegenerator.vib.tools/blog/postal-codes-addresses-across-24-countries` - International Address Formats & Postal Code Verification Across 24 Countries
+- `https://fakenamegenerator.vib.tools/blog/character-names-for-writers-game-developers` - Generating Believable Character Names for Fiction, Game Design & Tabletop RPGs
+- `https://fakenamegenerator.vib.tools/blog/address-validation-ecommerce-checkout-testing` - How to Test E-Commerce Address Validation & Shipping Form Workflows
+- `https://fakenamegenerator.vib.tools/blog/bulk-synthetic-data-qa-testing` - Seeding Test Databases with Bulk CSV Synthetic Data
+- `https://fakenamegenerator.vib.tools/blog/fake-name-generator-vs-real-pii-security` - Synthetic Test Personas vs Real PII & GDPR Compliance
+
+## Ethical & Privacy Standards
+All identities, social security numbers, and credit cards are synthetic test numbers. They are intended strictly for software engineering, user-experience testing, mock databases, and QA validation.
