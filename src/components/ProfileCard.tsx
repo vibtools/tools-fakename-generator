@@ -12,6 +12,7 @@ interface ProfileCardProps {
   onToggleFavorite: (identity: FakeIdentity) => void;
   isFavorite: boolean;
   copiedLabel: string | null;
+  onNotify?: (message: string) => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -19,22 +20,60 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onCopyField,
   onToggleFavorite,
   isFavorite,
-  copiedLabel
+  copiedLabel,
+  onNotify
 }) => {
   const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [photoSrc, setPhotoSrc] = useState<string | undefined>(identity.photoUrl);
+  const [fallbackCount, setFallbackCount] = useState(0);
 
   // Address single-line string
   const fullAddress = `${identity.streetAddress}, ${identity.city}, ${identity.stateCode || identity.state} ${identity.zipCode}, ${identity.country}`;
 
-  const handleDownloadPhoto = async () => {
-    if (!identity.photoUrl) return;
+  // Sync photo src when identity changes
+  React.useEffect(() => {
+    setPhotoSrc(identity.photoUrl);
+    setFallbackCount(0);
+    setDownloadSuccess(false);
+  }, [identity.id, identity.photoUrl]);
+
+  const handleImageError = () => {
+    if (fallbackCount === 0) {
+      // First fallback: alternate portrait from randomuser CDN
+      setFallbackCount(1);
+      const genderFolder = identity.gender === 'female' ? 'women' : 'men';
+      const alternateId = ((identity.age * 3 + 17) % 98) + 1;
+      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/${alternateId}.jpg`);
+    } else if (fallbackCount === 1) {
+      // Second fallback
+      setFallbackCount(2);
+      const genderFolder = identity.gender === 'female' ? 'women' : 'men';
+      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/1.jpg`);
+    } else {
+      setPhotoSrc(undefined);
+    }
+  };
+
+  const handleDownloadPhoto = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const targetUrl = photoSrc || identity.photoUrl;
+    if (!targetUrl) return;
+
     setIsDownloadingPhoto(true);
     try {
-      await downloadProfilePhoto(identity.photoUrl, identity.fullName);
-      onCopyField(identity.fullName, 'Profile Photo Downloaded');
-    } catch (e) {
-      console.error('Download photo error:', e);
+      const ok = await downloadProfilePhoto(targetUrl, identity.fullName);
+      if (ok) {
+        setDownloadSuccess(true);
+        if (onNotify) {
+          onNotify('Profile photo downloaded successfully!');
+        }
+        setTimeout(() => setDownloadSuccess(false), 2500);
+      }
+    } catch (err) {
+      console.error('Download photo error:', err);
     } finally {
       setIsDownloadingPhoto(false);
     }
@@ -88,27 +127,38 @@ Education: ${identity.degree} - ${identity.university}`;
             
             {/* Avatar representation with flag badge */}
             <div className="relative shrink-0 group">
-              {identity.photoUrl && !photoError ? (
+              {photoSrc ? (
                 <div 
                   onClick={handleDownloadPhoto}
-                  title="Click to download photo"
-                  className="w-13 h-13 sm:w-18 sm:h-18 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-2xs cursor-pointer relative"
+                  title="Click to download profile photo"
+                  className="w-14 h-14 sm:w-18 sm:h-18 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-2xs cursor-pointer relative group/avatar"
                 >
                   <img 
-                    src={identity.photoUrl} 
+                    src={photoSrc} 
                     alt={identity.fullName}
-                    onError={() => setPhotoError(true)}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    onError={handleImageError}
+                    className="w-full h-full object-cover transition-transform group-hover/avatar:scale-105"
                   />
                   
-                  {/* Subtle download icon overlay on mobile & desktop */}
-                  <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs">
-                    <Download className={`w-3.5 h-3.5 ${isDownloadingPhoto ? 'animate-bounce' : ''}`} />
-                    <span className="hidden sm:inline">{isDownloadingPhoto ? 'Saving...' : 'Save'}</span>
+                  {/* Download icon overlay on mobile & desktop */}
+                  <div className={`absolute inset-0 bg-slate-950/50 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs ${
+                    isDownloadingPhoto || downloadSuccess ? 'opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                  }`}>
+                    {downloadSuccess ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span className="text-[9px] text-emerald-300 font-semibold">Saved!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className={`w-3.5 h-3.5 ${isDownloadingPhoto ? 'animate-bounce text-blue-300' : ''}`} />
+                        <span className="text-[9px]">{isDownloadingPhoto ? 'Saving...' : 'Save'}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
-                <div className={`w-13 h-13 sm:w-18 sm:h-18 rounded-xl flex items-center justify-center border shadow-2xs ${
+                <div className={`w-14 h-14 sm:w-18 sm:h-18 rounded-xl flex items-center justify-center border shadow-2xs ${
                   identity.gender === 'male'
                     ? 'bg-blue-50/70 dark:bg-slate-800 border-blue-200/80 dark:border-blue-900 text-blue-600 dark:text-blue-300'
                     : 'bg-rose-50/70 dark:bg-slate-800 border-rose-200/80 dark:border-rose-900 text-rose-600 dark:text-rose-300'
@@ -160,6 +210,31 @@ Education: ${identity.degree} - ${identity.university}`;
                 <span className="hidden xs:inline text-slate-300 dark:text-slate-700">·</span>
                 <span className="hidden xs:inline text-slate-600 dark:text-slate-400">{identity.country}</span>
               </div>
+
+              {/* Dedicated Download Photo Button */}
+              {photoSrc && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadPhoto}
+                    disabled={isDownloadingPhoto}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="Download profile photo directly as JPG"
+                  >
+                    {downloadSuccess ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Photo Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className={`w-3 h-3 ${isDownloadingPhoto ? 'animate-bounce text-blue-600' : ''}`} />
+                        <span>{isDownloadingPhoto ? 'Downloading...' : 'Download Photo'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>

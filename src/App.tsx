@@ -557,6 +557,12 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             isFavorite={isCurrentFavorite}
             copiedLabel={copiedLabel}
+            onNotify={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => {
+                setToastMessage((current) => (current === msg ? null : current));
+              }, 2500);
+            }}
           />
 
           {/* Structured Biodata Cards (Phone, Financial, Employment, Physical, Digital) */}

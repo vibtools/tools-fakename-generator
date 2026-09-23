@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateIdentity } from './src/utils/generator.js';
-import type { CountryCode, Gender, NameSet } from './src/types.js';
+import { generateIdentity } from './src/utils/generator';
+import type { CountryCode, Gender, NameSet } from './src/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -117,6 +117,50 @@ async function startServer() {
       return res.json(data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Random user proxy error';
+      return res.status(500).json({ error: message });
+    }
+  });
+
+  // GET /api/download-photo proxy for clean browser file downloading
+  app.get('/api/download-photo', async (req: Request, res: Response) => {
+    try {
+      const url = req.query.url as string;
+      const name = (req.query.name as string) || 'profile';
+
+      if (!url || !/^https?:\/\//i.test(url)) {
+        return res.status(400).json({ error: 'Valid url query param required' });
+      }
+
+      const cleanName = (name || 'profile')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .slice(0, 45);
+      const filename = `${cleanName || 'profile'}_photo.jpg`;
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ error: 'Failed to fetch image from source' });
+      }
+
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      return res.send(buffer);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error proxying photo';
       return res.status(500).json({ error: message });
     }
   });

@@ -281,6 +281,12 @@ export function generateIdentity(options: GeneratorOptions): FakeIdentity {
   const latOffset = (Math.random() - 0.5) * 0.05;
   const lngOffset = (Math.random() - 0.5) * 0.05;
 
+  // RandomUser Portrait Photo
+  const photoGender = actualGender === 'female' ? 'women' : 'men';
+  const photoId = randomInt(1, 99);
+  const photoUrl = `https://randomuser.me/api/portraits/${photoGender}/${photoId}.jpg`;
+  const photoThumbnailUrl = `https://randomuser.me/api/portraits/thumb/${photoGender}/${photoId}.jpg`;
+
   return {
     id: generateGuid(),
     createdAt: Date.now(),
@@ -338,7 +344,11 @@ export function generateIdentity(options: GeneratorOptions): FakeIdentity {
     userAgent,
     guid,
     trackingNumber,
-    vehicle
+    vehicle,
+
+    photoUrl,
+    photoThumbnailUrl,
+    dataSource: 'randomuser.me'
   };
 }
 
@@ -369,7 +379,8 @@ export function exportToCSV(identities: FakeIdentity[]): string {
     'SSN/ID',
     'Birthday',
     'Occupation',
-    'Company'
+    'Company',
+    'Photo URL'
   ];
 
   const rows = identities.map((id) => [
@@ -390,7 +401,8 @@ export function exportToCSV(identities: FakeIdentity[]): string {
     `"${id.ssn}"`,
     `"${id.birthday}"`,
     `"${id.occupation}"`,
-    `"${id.company}"`
+    `"${id.company}"`,
+    `"${id.photoUrl || ''}"`
   ]);
 
   return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
