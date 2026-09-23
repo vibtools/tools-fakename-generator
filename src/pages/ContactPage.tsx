@@ -305,7 +305,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onBackToGenerator }) =
                     Message Dispatched Successfully!
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    Thank you, {name}. Your inquiry has been routed to the Vib Tools engineering and support inbox. We will respond to <span className="font-semibold text-slate-800 dark:text-slate-200">{email}</span> within 24 business hours.
+                    Thank you, {name}. Your inquiry has been routed to the Vib Tools engineering and support inbox. We will respond from <a href="mailto:support@vib.tools" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">support@vib.tools</a> within 24 business hours.
                   </p>
                   <button
                     type="button"

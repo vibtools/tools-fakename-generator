@@ -281,11 +281,13 @@ export function generateIdentity(options: GeneratorOptions): FakeIdentity {
   const latOffset = (Math.random() - 0.5) * 0.05;
   const lngOffset = (Math.random() - 0.5) * 0.05;
 
-  // RandomUser Portrait Photo
+  // Diverse Portrait Photo with Unique Cache Buster
   const photoGender = actualGender === 'female' ? 'women' : 'men';
+  // Use a pseudo-random integer 1-99 for RandomUser portrait CDN
   const photoId = randomInt(1, 99);
-  const photoUrl = `https://randomuser.me/api/portraits/${photoGender}/${photoId}.jpg`;
-  const photoThumbnailUrl = `https://randomuser.me/api/portraits/thumb/${photoGender}/${photoId}.jpg`;
+  const photoNonce = `${Date.now()}_${randomInt(100, 999)}`;
+  const photoUrl = `https://randomuser.me/api/portraits/${photoGender}/${photoId}.jpg?v=${photoNonce}`;
+  const photoThumbnailUrl = `https://randomuser.me/api/portraits/thumb/${photoGender}/${photoId}.jpg?v=${photoNonce}`;
 
   return {
     id: generateGuid(),

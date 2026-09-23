@@ -27,6 +27,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [photoSrc, setPhotoSrc] = useState<string | undefined>(identity.photoUrl);
   const [fallbackCount, setFallbackCount] = useState(0);
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   // Address single-line string
   const fullAddress = `${identity.streetAddress}, ${identity.city}, ${identity.stateCode || identity.state} ${identity.zipCode}, ${identity.country}`;
@@ -35,21 +36,35 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   React.useEffect(() => {
     setPhotoSrc(identity.photoUrl);
     setFallbackCount(0);
+    setIsImageLoading(true);
     setDownloadSuccess(false);
   }, [identity.id, identity.photoUrl]);
 
   const handleImageError = () => {
+    setIsImageLoading(false);
+    const genderFolder = identity.gender === 'female' ? 'women' : 'men';
+
     if (fallbackCount === 0) {
-      // First fallback: alternate portrait from randomuser CDN
+      // First fallback: Pravatar portrait (multi-CDN, highly resilient, unaffected by adblockers/ISP blocks)
       setFallbackCount(1);
-      const genderFolder = identity.gender === 'female' ? 'women' : 'men';
-      const alternateId = ((identity.age * 3 + 17) % 98) + 1;
-      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/${alternateId}.jpg`);
+      const hash = Math.abs(
+        identity.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + (identity.age || 28)
+      );
+      const pravatarId = (hash % 70) + 1;
+      setPhotoSrc(`https://i.pravatar.cc/300?img=${pravatarId}`);
     } else if (fallbackCount === 1) {
-      // Second fallback
+      // Second fallback: alternate RandomUser portrait with fresh cache-buster
       setFallbackCount(2);
-      const genderFolder = identity.gender === 'female' ? 'women' : 'men';
-      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/1.jpg`);
+      const alternateId = ((identity.age * 3 + 17) % 98) + 1;
+      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/${alternateId}.jpg?_cb=${Date.now()}`);
+    } else if (fallbackCount === 2) {
+      // Third fallback: DiceBear modern SVG avatar
+      setFallbackCount(3);
+      setPhotoSrc(`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(identity.fullName || identity.id)}`);
+    } else if (fallbackCount === 3) {
+      // Fourth fallback: DiceBear Micah avatar
+      setFallbackCount(4);
+      setPhotoSrc(`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(identity.fullName || identity.id)}`);
     } else {
       setPhotoSrc(undefined);
     }
@@ -133,15 +148,28 @@ Education: ${identity.degree} - ${identity.university}`;
                   title="Click to download profile photo"
                   className="w-14 h-14 sm:w-18 sm:h-18 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-2xs cursor-pointer relative group/avatar"
                 >
+                  {/* Image loading skeleton indicator */}
+                  {isImageLoading && (
+                    <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700/80 animate-pulse flex items-center justify-center z-0">
+                      <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 select-none">
+                        {identity.firstName[0]}{identity.lastName[0]}
+                      </span>
+                    </div>
+                  )}
+
                   <img 
+                    key={`${identity.id}-${fallbackCount}`}
                     src={photoSrc} 
                     alt={identity.fullName}
+                    onLoad={() => setIsImageLoading(false)}
                     onError={handleImageError}
-                    className="w-full h-full object-cover transition-transform group-hover/avatar:scale-105"
+                    className={`w-full h-full object-cover transition-all duration-300 group-hover/avatar:scale-105 relative z-10 ${
+                      isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                    }`}
                   />
                   
                   {/* Download icon overlay on mobile & desktop */}
-                  <div className={`absolute inset-0 bg-slate-950/50 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs ${
+                  <div className={`absolute inset-0 z-20 bg-slate-950/50 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs ${
                     isDownloadingPhoto || downloadSuccess ? 'opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
                   }`}>
                     {downloadSuccess ? (

@@ -1,42 +1,51 @@
 {
   "$schema": "https://schema.ygit.dev/vibtools/v1/vibtools.schema.json",
   "schemaVersion": 1,
-  "name": "Your Project Name",
-  "slug": "your-project-slug",
-  "category": "Desktop Apps",
+  "name": "Fake Name & Identity Generator",
+  "slug": "fake-name-generator",
+  "category": "Developer Tools",
   "status": "Available",
   "version": "1.0.0",
-  "subtitle": "Clear, concise one-line summary",
-  "repository": "your-org/your-repo",
-  "description": "A clear description of what your tool does and why users love it.",
+  "subtitle": "Realistic synthetic identity, address, and test card generator",
+  "repository": "vibtools/fake-name-generator",
+  "description": "A privacy-first, zero-retention synthetic identity and test data generator. Synthesizes complete realistic profiles, Luhn-valid test payment cards, authentic postal addresses across 24 countries, geocoded coordinates, real portrait photos, and instant CSV/JSON/SQL batch exports for developers and QA engineers.",
   "assets": {
     "logoUrl": "vibtools/assets/logo.png",
     "thumbnailUrl": "vibtools/assets/thumbnail.png",
     "ogImageUrl": "vibtools/assets/og-image.png",
     "screenshots": [
-      "vibtools/assets/screenshot.png"
+      "vibtools/assets/thumbnail.png",
+      "vibtools/assets/og-image.png"
     ]
   },
   "documents": {
-    "quickStart": "vibtools/quick-start.md",
-    "features": "vibtools/features.md",
-    "faq": "vibtools/faq.md",
-    "whatsNew": "vibtools/whats-new.md"
+    "quickStart": "vibtools/docs/quick-start.md",
+    "features": "vibtools/docs/features.md",
+    "faq": "vibtools/docs/faq.md",
+    "whatsNew": "vibtools/docs/whats-new.md"
   },
   "links": {
-    "liveDemo": "https://your-demo-url.com",
-    "download": "https://your-download-url.com",
-    "docs": "https://your-docs-url.com",
-    "github": "https://github.com/your-org/your-repo"
+    "liveDemo": "https://fakenamegenerator.vib.tools/",
+    "download": "https://github.com/vibtools/fake-name-generator/releases",
+    "docs": "https://vib.tools/docs/fake-name-generator",
+    "github": "https://github.com/vibtools/fake-name-generator",
+    "website": "https://vib.tools/"
   },
   "tags": [
-    "Productivity",
-    "Utility",
+    "Identity Generator",
+    "Testing",
+    "Mock Data",
+    "Developer Tools",
+    "Privacy",
     "Open Source"
   ],
   "flags": {
     "isActive": true,
     "isOpenSource": true,
-    "isFeatured": false
+    "isFeatured": true
+  },
+  "custom": {
+    "brand": "Vib Tools",
+    "organization": "vibtools"
   }
 }

@@ -292,16 +292,17 @@ export default function App() {
     } catch {}
   }, [options]);
 
-  const handleGenerate = useCallback(async () => {
+  const handleGenerate = useCallback(async (customOptions?: GeneratorOptions) => {
+    const activeOptions = customOptions || options;
     setIsGenerating(true);
     try {
-      const newId = await fetchRandomUserIdentity(options);
+      const newId = await fetchRandomUserIdentity(activeOptions);
       setCurrentIdentity(newId);
       // Add to history (avoid duplicates at the top)
       setHistory((prev) => [newId, ...prev.filter(p => p.id !== newId.id)].slice(0, 35));
     } catch (e) {
       console.warn('RandomUser generation failed, using built-in fallback:', e);
-      const fallbackId = generateIdentity(options);
+      const fallbackId = generateIdentity(activeOptions);
       fallbackId.dataSource = 'built-in';
       setCurrentIdentity(fallbackId);
       setHistory((prev) => [fallbackId, ...prev.filter(p => p.id !== fallbackId.id)].slice(0, 35));
@@ -309,6 +310,19 @@ export default function App() {
       setIsGenerating(false);
     }
   }, [options]);
+
+  const handleOptionsChange = useCallback((newOptions: GeneratorOptions) => {
+    const shouldRegenerate = 
+      newOptions.gender !== options.gender ||
+      newOptions.country !== options.country ||
+      newOptions.nameSet !== options.nameSet;
+
+    setOptions(newOptions);
+
+    if (shouldRegenerate) {
+      handleGenerate(newOptions);
+    }
+  }, [options, handleGenerate]);
 
   // Initial fetch on mount to load fresh RandomUser data with portrait
   useEffect(() => {
@@ -545,8 +559,8 @@ export default function App() {
           {/* Control Bar (Gender, Nameset, Country, Age range, Generate) */}
           <ControlBar
             options={options}
-            onOptionsChange={setOptions}
-            onGenerate={handleGenerate}
+            onOptionsChange={handleOptionsChange}
+            onGenerate={() => handleGenerate()}
             isGenerating={isGenerating}
           />
 

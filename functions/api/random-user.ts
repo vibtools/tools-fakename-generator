@@ -9,11 +9,14 @@ export async function onRequestGet(context: { request: Request; env: Record<stri
     if (gender && (gender === 'male' || gender === 'female')) {
       targetUrl += `&gender=${encodeURIComponent(gender)}`;
     }
+    // Bust upstream edge cache
+    targetUrl += `&_cb=${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const response = await fetch(targetUrl, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'VibTools-FakeNameGenerator/1.0'
+        'User-Agent': 'VibTools-FakeNameGenerator/1.0',
+        'Cache-Control': 'no-cache'
       }
     });
 
@@ -22,7 +25,8 @@ export async function onRequestGet(context: { request: Request; env: Record<stri
         status: response.status,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store'
         }
       });
     }
@@ -33,7 +37,11 @@ export async function onRequestGet(context: { request: Request; env: Record<stri
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=60, s-maxage=300'
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'CDN-Cache-Control': 'no-store',
+        'Cloudflare-CDN-Cache-Control': 'no-store'
       }
     });
   } catch (err: any) {

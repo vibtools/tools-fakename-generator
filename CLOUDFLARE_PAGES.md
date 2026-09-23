@@ -47,7 +47,7 @@ Cloudflare Pages automatically mounts the `/functions` directory onto the edge n
   }
   ```
 - **`GET /api/random-user`**:
-  Edge caching proxy for RandomUser API to eliminate client-side CORS issues and latency.
+  High-speed edge proxy for RandomUser API with zero-cache guarantees (`Cache-Control: no-store`) ensuring fresh portrait photos and dynamic identity generation on every call without stale Cloudflare edge caching.
 
 ---
 

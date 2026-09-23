@@ -176,8 +176,11 @@ function mapRandomUserToIdentity(user: RandomUserResult, requestedCountry: Count
   const actualGender = gender === 'female' ? 'female' : 'male';
   const photoGender = actualGender === 'female' ? 'women' : 'men';
   const randomPhotoId = Math.floor(Math.random() * 98) + 1;
-  const photoUrl = user.picture?.large || `https://randomuser.me/api/portraits/${photoGender}/${randomPhotoId}.jpg`;
-  const photoThumbnailUrl = user.picture?.thumbnail || `https://randomuser.me/api/portraits/thumb/${photoGender}/${randomPhotoId}.jpg`;
+  // Always attach a unique cache-buster token to the photo URL to prevent browser/CDN image freeze
+  const rawPhoto = user.picture?.large || `https://randomuser.me/api/portraits/${photoGender}/${randomPhotoId}.jpg`;
+  const photoUrl = rawPhoto.includes('?') ? `${rawPhoto}&v=${Date.now()}` : `${rawPhoto}?v=${Date.now()}`;
+  const rawThumb = user.picture?.thumbnail || `https://randomuser.me/api/portraits/thumb/${photoGender}/${randomPhotoId}.jpg`;
+  const photoThumbnailUrl = rawThumb.includes('?') ? `${rawThumb}&v=${Date.now()}` : `${rawThumb}?v=${Date.now()}`;
 
   return {
     id: `rnd_${user.login?.uuid || Math.random().toString(36).substring(2, 9)}`,
@@ -238,7 +241,7 @@ function mapRandomUserToIdentity(user: RandomUserResult, requestedCountry: Count
     trackingNumber,
     vehicle,
 
-    // Real portrait photo from RandomUser CDN
+    // Real portrait photo from RandomUser CDN with cache buster
     photoUrl,
     photoThumbnailUrl,
     dataSource: 'randomuser.me'
@@ -247,14 +250,14 @@ function mapRandomUserToIdentity(user: RandomUserResult, requestedCountry: Count
 
 /**
  * Fetch a realistic identity from RandomUser.me CDN or built-in engine.
- * Guarantees a verified randomuser.me profile photo every single time.
+ * Guarantees a fresh, verified profile photo on every single invocation.
  */
 export async function fetchRandomUserIdentity(options: GeneratorOptions): Promise<FakeIdentity> {
   const isSupported = RANDOM_USER_COUNTRIES.includes(options.country);
   
   if (!isSupported) {
-    // For countries with authentic localized databases (e.g. BD, JP),
-    // use built-in engine which has authentic localized addresses + verified randomuser portrait.
+    // For countries with authentic localized databases (e.g. BD, JP, IT),
+    // use built-in engine which has authentic localized addresses + verified portrait.
     const local = generateIdentity(options);
     local.dataSource = 'randomuser.me';
     return local;
@@ -266,31 +269,55 @@ export async function fetchRandomUserIdentity(options: GeneratorOptions): Promis
   try {
     const natParam = options.country.toLowerCase();
     const genderParam = options.gender !== 'random' ? `&gender=${options.gender}` : '';
+    // Unique cache-buster query parameter to strictly prevent Cloudflare Edge & browser HTTP caching
+    const cacheBust = `_cb=${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     
-    // First try our same-origin backend proxy to bypass browser adblockers and CORS
     let res: Response | null = null;
+    let data: any = null;
+
+    // 1. Try our same-origin edge proxy first
     try {
-      res = await fetch(`/api/random-user?nat=${natParam}${genderParam}&results=1`, { signal: controller.signal });
+      res = await fetch(`/api/random-user?nat=${natParam}${genderParam}&results=1&${cacheBust}`, {
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (res && res.ok) {
+        const parsed = await res.json();
+        if (parsed && Array.isArray(parsed.results) && parsed.results.length > 0) {
+          data = parsed;
+        }
+      }
     } catch {
-      // Fall back to direct RandomUser CDN endpoint
-      const directUrl = `https://randomuser.me/api/?nat=${natParam}${genderParam}&noinfo`;
-      res = await fetch(directUrl, { signal: controller.signal });
+      // Edge proxy failed or errored, proceed to direct endpoint
+    }
+
+    // 2. Fall back to direct RandomUser CDN endpoint if edge proxy didn't return valid data
+    if (!data) {
+      try {
+        const directUrl = `https://randomuser.me/api/?nat=${natParam}${genderParam}&noinfo&${cacheBust}`;
+        const directRes = await fetch(directUrl, { signal: controller.signal });
+        if (directRes && directRes.ok) {
+          const directData = await directRes.json();
+          if (directData && Array.isArray(directData.results) && directData.results.length > 0) {
+            data = directData;
+          }
+        }
+      } catch {
+        // Direct fetch failed
+      }
     }
 
     clearTimeout(timeoutId);
 
-    if (res && res.ok) {
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        return mapRandomUserToIdentity(data.results[0], options.country);
-      }
+    if (data && data.results && data.results.length > 0) {
+      return mapRandomUserToIdentity(data.results[0], options.country);
     }
 
     throw new Error('No results returned from RandomUser API');
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn('RandomUser API fetch error or timeout, switching to verified generator:', err);
-    // Instant fallback with verified RandomUser photo URL
+    // Instant fallback with verified photo URL
     const fallbackIdentity = generateIdentity(options);
     fallbackIdentity.dataSource = 'randomuser.me';
     return fallbackIdentity;
@@ -318,22 +345,46 @@ export async function fetchBulkRandomUserIdentities(count: number, options: Gene
   try {
     const natParam = options.country.toLowerCase();
     const genderParam = options.gender !== 'random' ? `&gender=${options.gender}` : '';
+    const cacheBust = `_cb=${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     
-    let res: Response | null = null;
+    let data: any = null;
+
+    // 1. Try edge proxy
     try {
-      res = await fetch(`/api/random-user?nat=${natParam}${genderParam}&results=${count}`, { signal: controller.signal });
+      const res = await fetch(`/api/random-user?nat=${natParam}${genderParam}&results=${count}&${cacheBust}`, {
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (res && res.ok) {
+        const parsed = await res.json();
+        if (parsed && Array.isArray(parsed.results) && parsed.results.length > 0) {
+          data = parsed;
+        }
+      }
     } catch {
-      const directUrl = `https://randomuser.me/api/?nat=${natParam}${genderParam}&results=${count}&noinfo`;
-      res = await fetch(directUrl, { signal: controller.signal });
+      // Edge proxy failed
+    }
+
+    // 2. Try direct CDN endpoint
+    if (!data) {
+      try {
+        const directUrl = `https://randomuser.me/api/?nat=${natParam}${genderParam}&results=${count}&noinfo&${cacheBust}`;
+        const directRes = await fetch(directUrl, { signal: controller.signal });
+        if (directRes && directRes.ok) {
+          const directData = await directRes.json();
+          if (directData && Array.isArray(directData.results) && directData.results.length > 0) {
+            data = directData;
+          }
+        }
+      } catch {
+        // Direct CDN failed
+      }
     }
 
     clearTimeout(timeoutId);
 
-    if (res && res.ok) {
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        return data.results.map((r: RandomUserResult) => mapRandomUserToIdentity(r, options.country));
-      }
+    if (data && data.results && data.results.length > 0) {
+      return data.results.map((r: RandomUserResult) => mapRandomUserToIdentity(r, options.country));
     }
 
     throw new Error('No bulk results returned');

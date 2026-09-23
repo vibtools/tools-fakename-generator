@@ -92,12 +92,15 @@ async function startServer() {
 
   // GET /api/random-user proxy
   app.get('/api/random-user', async (req: Request, res: Response) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     try {
       const nat = (req.query.nat as string) || 'us';
       const gender = (req.query.gender as string) || '';
       const results = (req.query.results as string) || '1';
 
-      let targetUrl = `https://randomuser.me/api/?nat=${encodeURIComponent(nat)}&results=${encodeURIComponent(results)}&noinfo`;
+      let targetUrl = `https://randomuser.me/api/?nat=${encodeURIComponent(nat)}&results=${encodeURIComponent(results)}&noinfo&_cb=${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       if (gender && (gender === 'male' || gender === 'female')) {
         targetUrl += `&gender=${encodeURIComponent(gender)}`;
       }
@@ -105,7 +108,8 @@ async function startServer() {
       const response = await fetch(targetUrl, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'VibTools-FakeNameGenerator/1.0'
+          'User-Agent': 'VibTools-FakeNameGenerator/1.0',
+          'Cache-Control': 'no-cache'
         }
       });
 

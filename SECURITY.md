@@ -5,7 +5,7 @@
 The **Vib Tools** team takes the security and reliability of our open-source software seriously. If you discover a security vulnerability, please do **NOT** open a public issue.
 
 Instead, please send an encrypted or direct email to:
-📧 **[teamdarkdevil24@gmail.com](mailto:teamdarkdevil24@gmail.com)** or **[security@vib.tools](mailto:security@vib.tools)**
+📧 **[security@vib.tools](mailto:security@vib.tools)** or **[support@vib.tools](mailto:support@vib.tools)**
 
 Please include:
 - A description of the vulnerability and its potential impact.
