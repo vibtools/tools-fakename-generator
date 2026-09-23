@@ -115,10 +115,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                 Md Nurnobi (@victorsteele)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Founder &amp; Principal Software Engineer at Vib Tools
+                Connected Repository Maintainer &amp; Engineer &bull; Vib Tools
               </p>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Vib Tools is an independent developer lab committed to crafting fast, distraction-free web applications and engineering utilities. Our products are engineered with TypeScript, WebAssembly, and Cloudflare Edge compute to deliver friction-free developer productivity.
+                Vib Tools builds practical desktop applications, self-hosted software, automation tooling, developer utilities, reusable frameworks, and open-source projects for real workflows.
               </p>
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
                 <a 

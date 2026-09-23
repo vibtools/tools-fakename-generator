@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.ygit.dev/vibtools/v1/vibtools.schema.json",
+  "schemaVersion": 1,
+  "name": "Your Project Name",
+  "slug": "your-project-slug",
+  "category": "Desktop Apps",
+  "status": "Available",
+  "version": "1.0.0",
+  "subtitle": "Clear, concise one-line summary",
+  "repository": "your-org/your-repo",
+  "description": "A clear description of what your tool does and why users love it.",
+  "assets": {
+    "logoUrl": "vibtools/assets/logo.png",
+    "thumbnailUrl": "vibtools/assets/thumbnail.png",
+    "ogImageUrl": "vibtools/assets/og-image.png",
+    "screenshots": [
+      "vibtools/assets/screenshot.png"
+    ]
+  },
+  "documents": {
+    "quickStart": "vibtools/quick-start.md",
+    "features": "vibtools/features.md",
+    "faq": "vibtools/faq.md",
+    "whatsNew": "vibtools/whats-new.md"
+  },
+  "links": {
+    "liveDemo": "https://your-demo-url.com",
+    "download": "https://your-download-url.com",
+    "docs": "https://your-docs-url.com",
+    "github": "https://github.com/your-org/your-repo"
+  },
+  "tags": [
+    "Productivity",
+    "Utility",
+    "Open Source"
+  ],
+  "flags": {
+    "isActive": true,
+    "isOpenSource": true,
+    "isFeatured": false
+  }
+}

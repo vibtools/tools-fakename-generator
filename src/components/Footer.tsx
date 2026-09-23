@@ -180,7 +180,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
               <p>
-                Engineered by{' '}
+                Maintained by{' '}
                 <a 
                   href="https://github.com/victorsteele" 
                   target="_blank" 
@@ -192,8 +192,8 @@ export const Footer: React.FC<FooterProps> = ({
               </p>
               <div className="flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                <a href="mailto:teamdarkdevil24@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  teamdarkdevil24@gmail.com
+                <a href="mailto:hello@vib.tools" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  hello@vib.tools
                 </a>
               </div>
               <div className="flex items-center gap-1.5">

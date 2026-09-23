@@ -134,7 +134,9 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({
             </p>
             <div className="p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
               <p><strong>Vib Tools Privacy &amp; Compliance Team</strong></p>
-              <p>Email: <a href="mailto:teamdarkdevil24@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">teamdarkdevil24@gmail.com</a></p>
+              <p>Email: <a href="mailto:support@vib.tools" className="text-blue-600 dark:text-blue-400 hover:underline">support@vib.tools</a></p>
+              <p>General Inquiries: <a href="mailto:hello@vib.tools" className="text-blue-600 dark:text-blue-400 hover:underline">hello@vib.tools</a></p>
+              <p>Head Office: 5660 Kochakata, Nageswari, Kurigram, Rangpur, Bangladesh</p>
               <p>Website: <a href="https://vib.tools/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">https://vib.tools/</a></p>
             </div>
           </section>
