@@ -156,78 +156,214 @@ Education: ${identity.degree} - ${identity.university}`;
         {/* Top Header: Avatar + Name + Core Meta + Action Buttons */}
         <div className="flex items-start justify-between gap-2.5 sm:gap-4">
           
-          {/* Left: Avatar + Identity Titles */}
-          <div className="flex items-center sm:items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+          {/* Left: Avatar Column (with download button underneath) + Identity Titles */}
+          <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1">
             
-            {/* Avatar representation with flag badge */}
-            <div className="relative shrink-0 group">
-              {photoSrc ? (
-                <div 
-                  onClick={(e) => handleDownloadPhoto(selectedSize, e)}
-                  title="Click to download high-resolution HD profile photo"
-                  className="w-14 h-14 sm:w-18 sm:h-18 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-2xs cursor-pointer relative group/avatar"
+            {/* Avatar Column with Photo & Compact Download Button */}
+            <div className="flex flex-col items-center shrink-0">
+              
+              {/* Avatar Box with flag badge */}
+              <div className="relative group">
+                {photoSrc ? (
+                  <div 
+                    onClick={(e) => handleDownloadPhoto(selectedSize, e)}
+                    title="Click to download high-resolution HD profile photo"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-2xs cursor-pointer relative group/avatar"
+                  >
+                    {/* Image loading skeleton indicator */}
+                    {isImageLoading && (
+                      <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700/80 animate-pulse flex items-center justify-center z-0">
+                        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 select-none">
+                          {identity.firstName[0]}{identity.lastName[0]}
+                        </span>
+                      </div>
+                    )}
+
+                    <img 
+                      key={`${identity.id}-${fallbackCount}`}
+                      src={photoSrc} 
+                      alt={identity.fullName}
+                      onLoad={() => setIsImageLoading(false)}
+                      onError={handleImageError}
+                      className={`w-full h-full object-cover transition-all duration-300 group-hover/avatar:scale-105 relative z-10 ${
+                        isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                      }`}
+                    />
+                    
+                    {/* Photo hover/tap download overlay */}
+                    <div className={`absolute inset-0 z-20 bg-slate-950/60 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs ${
+                      isDownloadingPhoto || downloadSuccess ? 'opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                    }`}>
+                      {downloadSuccess ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-400" />
+                          <span className="text-[9px] text-emerald-300 font-semibold">HD Saved!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className={`w-3.5 h-3.5 ${isDownloadingPhoto ? 'animate-bounce text-blue-300' : ''}`} />
+                          <span className="text-[8.5px] font-semibold">{isDownloadingPhoto ? 'Saving...' : 'Save HD'}</span>
+                          <span className="text-[7.5px] text-blue-200">{selectedSize === 'original' ? 'Orig' : `${selectedSize}px`}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center border shadow-2xs ${
+                    identity.gender === 'male'
+                      ? 'bg-blue-50/70 dark:bg-slate-800 border-blue-200/80 dark:border-blue-900 text-blue-600 dark:text-blue-300'
+                      : 'bg-rose-50/70 dark:bg-slate-800 border-rose-200/80 dark:border-rose-900 text-rose-600 dark:text-rose-300'
+                  }`}>
+                    <span className="text-lg sm:text-2xl font-semibold tracking-tight">
+                      {identity.firstName[0]}{identity.lastName[0]}
+                    </span>
+                  </div>
+                )}
+
+                {/* Country Flag Overlay Badge */}
+                <span 
+                  title={`${identity.country} (${identity.countryCode})`} 
+                  className="absolute -bottom-1 -right-1 text-xs sm:text-sm bg-white dark:bg-slate-800 rounded-full px-1 py-0.2 shadow-2xs border border-slate-200/80 dark:border-slate-700 select-none z-20"
                 >
-                  {/* Image loading skeleton indicator */}
-                  {isImageLoading && (
-                    <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700/80 animate-pulse flex items-center justify-center z-0">
-                      <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 select-none">
-                        {identity.firstName[0]}{identity.lastName[0]}
-                      </span>
+                  {getFlag(identity.countryCode)}
+                </span>
+              </div>
+
+              {/* Clean Small Download Button under profile photo */}
+              {photoSrc && (
+                <div className="mt-1.5 flex flex-col items-center relative w-full" ref={dropdownRef}>
+                  <div className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xs hover:border-blue-400 dark:hover:border-blue-500 transition-all">
+                    {/* Small Download button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadPhoto(selectedSize)}
+                      disabled={isDownloadingPhoto}
+                      title="Click to download profile photo in HD"
+                      className="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-l-md transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                    >
+                      {downloadSuccess ? (
+                        <>
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-[9px] sm:text-[10px]">Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className={`w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 ${isDownloadingPhoto ? 'animate-bounce text-blue-600 dark:text-blue-400' : 'text-blue-600 dark:text-blue-400'}`} />
+                          <span>{isDownloadingPhoto ? 'Saving...' : 'Download'}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Small resolution dropdown toggle */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowSizeDropdown(prev => !prev);
+                      }}
+                      disabled={isDownloadingPhoto}
+                      title={`Resolution: ${selectedSize === 'original' ? 'Original' : `${selectedSize}px`}`}
+                      aria-label="Change photo resolution"
+                      className="px-1 py-0.5 border-l border-slate-200 dark:border-slate-700 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
+                    >
+                      <ChevronDown className={`w-2.5 h-2.5 transition-transform ${showSizeDropdown ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Clean "Click to download" subtitle */}
+                  <span className="text-[8px] sm:text-[8.5px] text-slate-400 dark:text-slate-500 font-normal mt-0.5 select-none text-center whitespace-nowrap">
+                    Click to download
+                  </span>
+
+                  {/* Resolution Selector Dropdown Menu */}
+                  {showSizeDropdown && (
+                    <div className="absolute top-full left-0 mt-1 z-40 w-52 sm:w-56 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                      <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60 font-semibold text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                        Select Photo Resolution
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(800);
+                          handleDownloadPhoto(800);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
+                          selectedSize === 800 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-1.5">
+                            <strong>HD 800 × 800 px</strong>
+                            <span className="text-[8.5px] px-1 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-medium">Recommended</span>
+                          </span>
+                          <span className="text-[9.5px] text-slate-400">Crisp, high clarity for testing</span>
+                        </div>
+                        {selectedSize === 800 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-1.5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(1024);
+                          handleDownloadPhoto(1024);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
+                          selectedSize === 1024 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-1.5">
+                            <strong>Full HD 1024 × 1024</strong>
+                            <span className="text-[8.5px] px-1 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-medium">Ultra High</span>
+                          </span>
+                          <span className="text-[9.5px] text-slate-400">Maximum resolution & detail</span>
+                        </div>
+                        {selectedSize === 1024 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-1.5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(512);
+                          handleDownloadPhoto(512);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
+                          selectedSize === 512 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span><strong>Standard 512 × 512 px</strong></span>
+                          <span className="text-[9.5px] text-slate-400">Standard web avatar size</span>
+                        </div>
+                        {selectedSize === 512 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-1.5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize('original');
+                          handleDownloadPhoto('original');
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between border-t border-slate-100 dark:border-slate-700/60 hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
+                          selectedSize === 'original' ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span><strong>Original Size</strong></span>
+                          <span className="text-[9.5px] text-slate-400">Direct source dimensions</span>
+                        </div>
+                        {selectedSize === 'original' && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-1.5" />}
+                      </button>
                     </div>
                   )}
-
-                  <img 
-                    key={`${identity.id}-${fallbackCount}`}
-                    src={photoSrc} 
-                    alt={identity.fullName}
-                    onLoad={() => setIsImageLoading(false)}
-                    onError={handleImageError}
-                    className={`w-full h-full object-cover transition-all duration-300 group-hover/avatar:scale-105 relative z-10 ${
-                      isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-                    }`}
-                  />
-                  
-                  {/* Download icon overlay on mobile & desktop */}
-                  <div className={`absolute inset-0 z-20 bg-slate-950/60 flex flex-col items-center justify-center gap-0.5 text-white text-[9px] font-medium transition-opacity backdrop-blur-2xs ${
-                    isDownloadingPhoto || downloadSuccess ? 'opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
-                  }`}>
-                    {downloadSuccess ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[9px] text-emerald-300 font-semibold">HD Saved!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className={`w-3.5 h-3.5 ${isDownloadingPhoto ? 'animate-bounce text-blue-300' : ''}`} />
-                        <span className="text-[8.5px] font-semibold">{isDownloadingPhoto ? 'Saving...' : 'Save HD'}</span>
-                        <span className="text-[7.5px] text-blue-200">800px</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className={`w-14 h-14 sm:w-18 sm:h-18 rounded-xl flex items-center justify-center border shadow-2xs ${
-                  identity.gender === 'male'
-                    ? 'bg-blue-50/70 dark:bg-slate-800 border-blue-200/80 dark:border-blue-900 text-blue-600 dark:text-blue-300'
-                    : 'bg-rose-50/70 dark:bg-slate-800 border-rose-200/80 dark:border-rose-900 text-rose-600 dark:text-rose-300'
-                }`}>
-                  <span className="text-base sm:text-2xl font-semibold tracking-tight">
-                    {identity.firstName[0]}{identity.lastName[0]}
-                  </span>
                 </div>
               )}
 
-              {/* Country Flag Overlay Badge */}
-              <span 
-                title={`${identity.country} (${identity.countryCode})`} 
-                className="absolute -bottom-1 -right-1 text-xs sm:text-sm bg-white dark:bg-slate-800 rounded-full px-1 py-0.2 shadow-2xs border border-slate-200/80 dark:border-slate-700 select-none"
-              >
-                {getFlag(identity.countryCode)}
-              </span>
             </div>
 
             {/* Name and Quick Meta */}
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 pt-0.5">
               
               {/* Full Name & 1-Tap Copy */}
               <div className="flex items-center gap-1.5 group">
@@ -249,7 +385,7 @@ Education: ${identity.degree} - ${identity.university}`;
               </div>
 
               {/* Meta Tags / Badges */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+              <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                 <span className="font-medium text-blue-600 dark:text-blue-400">
                   {identity.prefix} {identity.gender}
                 </span>
@@ -258,131 +394,6 @@ Education: ${identity.degree} - ${identity.university}`;
                 <span className="hidden xs:inline text-slate-300 dark:text-slate-700">·</span>
                 <span className="hidden xs:inline text-slate-600 dark:text-slate-400">{identity.country}</span>
               </div>
-
-              {/* Dedicated Download Photo Button with HD resolution selector */}
-              {photoSrc && (
-                <div className="mt-2 flex items-center gap-1.5 relative" ref={dropdownRef}>
-                  <div className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition-all">
-                    {/* Primary Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadPhoto(selectedSize)}
-                      disabled={isDownloadingPhoto}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-700 rounded-l-md transition-colors cursor-pointer disabled:opacity-60"
-                      title={`Download profile photo in ${selectedSize === 'original' ? 'original size' : `${selectedSize}×${selectedSize} HD resolution`}`}
-                    >
-                      {downloadSuccess ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">HD Saved</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className={`w-3.5 h-3.5 ${isDownloadingPhoto ? 'animate-bounce text-blue-600 dark:text-blue-400' : 'text-blue-600 dark:text-blue-400'}`} />
-                          <span>{isDownloadingPhoto ? 'Downloading...' : 'Download Photo'}</span>
-                          <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">
-                            {selectedSize === 'original' ? 'Orig' : `${selectedSize}px`}
-                          </span>
-                        </>
-                      )}
-                    </button>
-
-                    {/* Dropdown Chevron Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setShowSizeDropdown(prev => !prev)}
-                      disabled={isDownloadingPhoto}
-                      className="px-1.5 py-1 border-l border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-700 rounded-r-md transition-colors cursor-pointer"
-                      title="Choose photo resolution (800x800 HD, 1024x1024 Full HD, 512x512)"
-                    >
-                      <ChevronDown className={`w-3 h-3 transition-transform ${showSizeDropdown ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''}`} />
-                    </button>
-                  </div>
-
-                  {/* Size Dropdown Menu */}
-                  {showSizeDropdown && (
-                    <div className="absolute top-full left-0 mt-1 z-30 w-56 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
-                      <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60 font-semibold text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-400">
-                        Select Photo Resolution
-                      </div>
-                      
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSize(800);
-                          handleDownloadPhoto(800);
-                        }}
-                        className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
-                          selectedSize === 800 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5">
-                            <strong>HD 800 × 800 px</strong>
-                            <span className="text-[9px] px-1 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-medium">Recommended</span>
-                          </span>
-                          <span className="text-[10px] text-slate-400">Crisp, high clarity for testing & mockups</span>
-                        </div>
-                        {selectedSize === 800 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-2" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSize(1024);
-                          handleDownloadPhoto(1024);
-                        }}
-                        className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
-                          selectedSize === 1024 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5">
-                            <strong>Full HD 1024 × 1024 px</strong>
-                            <span className="text-[9px] px-1 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-medium">Ultra High</span>
-                          </span>
-                          <span className="text-[10px] text-slate-400">Super sharp resolution & maximum detail</span>
-                        </div>
-                        {selectedSize === 1024 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-2" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSize(512);
-                          handleDownloadPhoto(512);
-                        }}
-                        className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
-                          selectedSize === 512 ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span><strong>Standard 512 × 512 px</strong></span>
-                          <span className="text-[10px] text-slate-400">Standard web avatar & profile size</span>
-                        </div>
-                        {selectedSize === 512 && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-2" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSize('original');
-                          handleDownloadPhoto('original');
-                        }}
-                        className={`w-full px-3 py-2 text-left flex items-center justify-between border-t border-slate-100 dark:border-slate-700/60 hover:bg-blue-50 dark:hover:bg-slate-700/70 transition-colors cursor-pointer ${
-                          selectedSize === 'original' ? 'bg-blue-50/60 dark:bg-slate-700/40 text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-700 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span><strong>Original Size</strong></span>
-                          <span className="text-[10px] text-slate-400">Direct source dimensions without scaling</span>
-                        </div>
-                        {selectedSize === 'original' && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-2" />}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
           </div>
