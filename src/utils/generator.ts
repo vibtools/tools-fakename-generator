@@ -2,6 +2,7 @@ import { FakeIdentity, GeneratorOptions, CreditCardInfo } from '../types';
 import { NAMES_DATA } from '../data/names';
 import { COUNTRIES_DATA } from '../data/locations';
 import { OCCUPATIONS, COMPANIES, UNIVERSITIES, DEGREES, VEHICLES, USER_AGENTS } from '../data/occupations';
+import { getHighResPortraitUrl, getPortraitThumbnailUrl } from '../data/portraits';
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -281,13 +282,11 @@ export function generateIdentity(options: GeneratorOptions): FakeIdentity {
   const latOffset = (Math.random() - 0.5) * 0.05;
   const lngOffset = (Math.random() - 0.5) * 0.05;
 
-  // Diverse Portrait Photo with Unique Cache Buster
-  const photoGender = actualGender === 'female' ? 'women' : 'men';
-  // Use a pseudo-random integer 1-99 for RandomUser portrait CDN
-  const photoId = randomInt(1, 99);
-  const photoNonce = `${Date.now()}_${randomInt(100, 999)}`;
-  const photoUrl = `https://randomuser.me/api/portraits/${photoGender}/${photoId}.jpg?v=${photoNonce}`;
-  const photoThumbnailUrl = `https://randomuser.me/api/portraits/thumb/${photoGender}/${photoId}.jpg?v=${photoNonce}`;
+  // Diverse Studio HD Portrait Photo with Deterministic Seed
+  const portraitSeed = `${firstName}_${lastName}_${Date.now()}`;
+  const photoUrl = getHighResPortraitUrl(actualGender, portraitSeed, 800, 92);
+  const photoHighResUrl = getHighResPortraitUrl(actualGender, portraitSeed, 1024, 95);
+  const photoThumbnailUrl = getPortraitThumbnailUrl(actualGender, portraitSeed);
 
   return {
     id: generateGuid(),
@@ -350,6 +349,7 @@ export function generateIdentity(options: GeneratorOptions): FakeIdentity {
 
     photoUrl,
     photoThumbnailUrl,
+    photoHighResUrl,
     dataSource: 'randomuser.me'
   };
 }

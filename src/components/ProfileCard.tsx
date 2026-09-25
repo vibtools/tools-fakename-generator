@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FakeIdentity } from '../types';
 import { downloadProfilePhoto, PhotoDownloadSize } from '../services/randomUserApi';
+import { getHighResPortraitUrl } from '../data/portraits';
 import { 
   Copy, Check, Bookmark, MapPin, ExternalLink, 
   Download, Printer, Sparkles, ChevronDown, Image as ImageIcon
@@ -60,21 +61,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   const handleImageError = () => {
     setIsImageLoading(false);
-    const genderFolder = identity.gender === 'female' ? 'women' : 'men';
 
     if (fallbackCount === 0) {
-      // First fallback: Pravatar high-res 800x800 portrait
+      // First fallback: alternate high-definition studio portrait
       setFallbackCount(1);
+      setPhotoSrc(getHighResPortraitUrl(identity.gender, `${identity.id}_alt_seed`, 800));
+    } else if (fallbackCount === 1) {
+      // Second fallback: Pravatar high-res 800x800 portrait
+      setFallbackCount(2);
       const hash = Math.abs(
         identity.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + (identity.age || 28)
       );
       const pravatarId = (hash % 70) + 1;
       setPhotoSrc(`https://i.pravatar.cc/800?img=${pravatarId}`);
-    } else if (fallbackCount === 1) {
-      // Second fallback: alternate RandomUser portrait with fresh cache-buster
-      setFallbackCount(2);
-      const alternateId = ((identity.age * 3 + 17) % 98) + 1;
-      setPhotoSrc(`https://randomuser.me/api/portraits/${genderFolder}/${alternateId}.jpg?_cb=${Date.now()}`);
     } else if (fallbackCount === 2) {
       // Third fallback: DiceBear modern SVG avatar
       setFallbackCount(3);
@@ -101,9 +100,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       const ok = await downloadProfilePhoto(targetUrl, identity.fullName, targetSize);
       if (ok) {
         setDownloadSuccess(true);
-        const sizeLabel = targetSize === 'original' ? 'original size' : `${targetSize}×${targetSize} HD`;
+        const sizeLabel = targetSize === 'original' ? 'original size' : `${targetSize}×${targetSize} Studio HD`;
         if (onNotify) {
-          onNotify(`Profile photo downloaded in ${sizeLabel} high quality!`);
+          onNotify(`Profile photo downloaded in ${sizeLabel} crystal-clear quality!`);
         }
         setTimeout(() => setDownloadSuccess(false), 2500);
       }

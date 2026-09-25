@@ -136,8 +136,25 @@ async function startServer() {
         return res.status(400).json({ error: 'Valid url query param required' });
       }
 
-      // If size is requested and target is Pravatar, upgrade resolution automatically
-      if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
+      // If size is requested, upgrade resolution automatically for Unsplash and Pravatar
+      if (targetUrl.includes('images.unsplash.com')) {
+        const s = size === 'original' ? 1400 : (parseInt(size, 10) || 800);
+        let upgraded = targetUrl;
+        if (upgraded.includes('w=')) {
+          upgraded = upgraded.replace(/w=\d+/, `w=${s}`).replace(/h=\d+/, `h=${s}`);
+        } else {
+          upgraded += `&w=${s}&h=${s}`;
+        }
+        if (upgraded.includes('q=')) {
+          upgraded = upgraded.replace(/q=\d+/, 'q=95');
+        } else {
+          upgraded += '&q=95';
+        }
+        if (!upgraded.includes('fit=crop')) {
+          upgraded += '&fit=crop&crop=faces';
+        }
+        targetUrl = upgraded;
+      } else if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
         targetUrl = targetUrl.replace(/i\.pravatar\.cc\/\d+/, `i.pravatar.cc/${size}`);
       }
 

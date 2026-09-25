@@ -131,5 +131,6 @@ export interface FakeIdentity {
   // Photo & Source
   photoUrl?: string;
   photoThumbnailUrl?: string;
+  photoHighResUrl?: string;
   dataSource?: 'randomuser.me' | 'built-in';
 }

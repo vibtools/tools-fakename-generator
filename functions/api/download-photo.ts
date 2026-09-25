@@ -12,8 +12,25 @@ export async function onRequestGet(context: { request: Request; env: Record<stri
       });
     }
 
-    // Upgrade Pravatar resolution if size specified
-    if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
+    // Upgrade Unsplash and Pravatar resolution if size specified
+    if (targetUrl.includes('images.unsplash.com')) {
+      const s = size === 'original' ? 1400 : (parseInt(size, 10) || 800);
+      let upgraded = targetUrl;
+      if (upgraded.includes('w=')) {
+        upgraded = upgraded.replace(/w=\d+/, `w=${s}`).replace(/h=\d+/, `h=${s}`);
+      } else {
+        upgraded += `&w=${s}&h=${s}`;
+      }
+      if (upgraded.includes('q=')) {
+        upgraded = upgraded.replace(/q=\d+/, 'q=95');
+      } else {
+        upgraded += '&q=95';
+      }
+      if (!upgraded.includes('fit=crop')) {
+        upgraded += '&fit=crop&crop=faces';
+      }
+      targetUrl = upgraded;
+    } else if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
       targetUrl = targetUrl.replace(/i\.pravatar\.cc\/\d+/, `i.pravatar.cc/${size}`);
     }
 
