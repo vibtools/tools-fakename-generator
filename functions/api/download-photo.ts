@@ -1,8 +1,9 @@
 export async function onRequestGet(context: { request: Request; env: Record<string, string> }): Promise<Response> {
   try {
     const url = new URL(context.request.url);
-    const targetUrl = url.searchParams.get('url');
+    let targetUrl = url.searchParams.get('url');
     const name = url.searchParams.get('name') || 'profile';
+    const size = url.searchParams.get('size') || '800';
 
     if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
       return new Response(JSON.stringify({ error: 'Valid url query param required' }), {
@@ -11,12 +12,18 @@ export async function onRequestGet(context: { request: Request; env: Record<stri
       });
     }
 
+    // Upgrade Pravatar resolution if size specified
+    if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
+      targetUrl = targetUrl.replace(/i\.pravatar\.cc\/\d+/, `i.pravatar.cc/${size}`);
+    }
+
     const cleanName = (name || 'profile')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '_')
       .replace(/_+/g, '_')
       .slice(0, 45);
-    const filename = `${cleanName || 'profile'}_photo.jpg`;
+    const sizeLabel = size === 'original' ? 'original' : `${size}x${size}_hd`;
+    const filename = `${cleanName || 'profile'}_${sizeLabel}_photo.jpg`;
 
     const imgRes = await fetch(targetUrl, {
       headers: {

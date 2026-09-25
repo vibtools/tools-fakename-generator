@@ -128,11 +128,17 @@ async function startServer() {
   // GET /api/download-photo proxy for clean browser file downloading
   app.get('/api/download-photo', async (req: Request, res: Response) => {
     try {
-      const url = req.query.url as string;
+      let targetUrl = req.query.url as string;
       const name = (req.query.name as string) || 'profile';
+      const size = (req.query.size as string) || '800';
 
-      if (!url || !/^https?:\/\//i.test(url)) {
+      if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
         return res.status(400).json({ error: 'Valid url query param required' });
+      }
+
+      // If size is requested and target is Pravatar, upgrade resolution automatically
+      if (size && size !== 'original' && /i\.pravatar\.cc\/\d+/.test(targetUrl)) {
+        targetUrl = targetUrl.replace(/i\.pravatar\.cc\/\d+/, `i.pravatar.cc/${size}`);
       }
 
       const cleanName = (name || 'profile')
@@ -140,9 +146,10 @@ async function startServer() {
         .replace(/[^a-z0-9]/g, '_')
         .replace(/_+/g, '_')
         .slice(0, 45);
-      const filename = `${cleanName || 'profile'}_photo.jpg`;
+      const sizeLabel = size === 'original' ? 'original' : `${size}x${size}_hd`;
+      const filename = `${cleanName || 'profile'}_${sizeLabel}_photo.jpg`;
 
-      const response = await fetch(url, {
+      const response = await fetch(targetUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }

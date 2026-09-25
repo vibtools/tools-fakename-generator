@@ -399,111 +399,275 @@ export async function fetchBulkRandomUserIdentities(count: number, options: Gene
   }
 }
 
+export type PhotoDownloadSize = 512 | 800 | 1024 | 'original';
+
 /**
- * Download portrait image directly to the client's device.
- * Uses the same-origin proxy /api/download-photo to bypass CORS and force native file save.
+ * Sharpen image data using an unsharp convolution kernel to enhance edge clarity
+ * and eliminate blurriness when upscaling portraits.
  */
-export async function downloadProfilePhoto(url: string, name: string): Promise<boolean> {
+function applyClaritySharpening(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  intensity: number = 0.22
+): void {
+  try {
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    const copy = new Uint8ClampedArray(data);
+
+    // Standard 3x3 unsharp convolution kernel
+    // Center: 1 + 4 * intensity
+    // Neighbors: -intensity
+    // Sum = 1.0 (strictly preserves luminance and chroma balance)
+    const centerWeight = 1 + 4 * intensity;
+    const neighborWeight = -intensity;
+
+    for (let y = 1; y < height - 1; y++) {
+      const rowOffset = y * width;
+      const upOffset = (y - 1) * width;
+      const downOffset = (y + 1) * width;
+
+      for (let x = 1; x < width - 1; x++) {
+        const idx = (rowOffset + x) << 2;
+        const up = (upOffset + x) << 2;
+        const down = (downOffset + x) << 2;
+        const left = (rowOffset + (x - 1)) << 2;
+        const right = (rowOffset + (x + 1)) << 2;
+
+        // Apply kernel to R, G, B channels
+        data[idx] = Math.max(0, Math.min(255, copy[idx] * centerWeight + (copy[up] + copy[down] + copy[left] + copy[right]) * neighborWeight));
+        data[idx + 1] = Math.max(0, Math.min(255, copy[idx + 1] * centerWeight + (copy[up + 1] + copy[down + 1] + copy[left + 1] + copy[right + 1]) * neighborWeight));
+        data[idx + 2] = Math.max(0, Math.min(255, copy[idx + 2] * centerWeight + (copy[up + 2] + copy[down + 2] + copy[left + 2] + copy[right + 2]) * neighborWeight));
+        // Keep Alpha channel (data[idx + 3]) untouched
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+  } catch {
+    // Canvas tainted or restricted; skip sharpening gracefully
+  }
+}
+
+/**
+ * Upscales an image source to high resolution using stepped progressive scaling
+ * and clarity sharpening for crisp, high-definition portraits.
+ */
+async function upscaleImageToHighRes(
+  imageSource: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
+  targetSize: number
+): Promise<Blob | null> {
+  // If target size is smaller or equal to source, do direct high-quality render
+  if (sourceWidth >= targetSize && sourceHeight >= targetSize) {
+    const canvas = document.createElement('canvas');
+    canvas.width = targetSize;
+    canvas.height = targetSize;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(imageSource, 0, 0, targetSize, targetSize);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  }
+
+  // Multi-pass stepped scaling for smooth gradient reproduction and minimal aliasing
+  let curW = sourceWidth || 128;
+  let curH = sourceHeight || 128;
+  let currentCanvas = document.createElement('canvas');
+  currentCanvas.width = curW;
+  currentCanvas.height = curH;
+  let currentCtx = currentCanvas.getContext('2d');
+  if (!currentCtx) return null;
+  currentCtx.drawImage(imageSource, 0, 0, curW, curH);
+
+  while (curW * 1.8 < targetSize) {
+    const nextW = Math.min(Math.round(curW * 1.8), targetSize);
+    const nextH = Math.min(Math.round(curH * 1.8), targetSize);
+    const stepCanvas = document.createElement('canvas');
+    stepCanvas.width = nextW;
+    stepCanvas.height = nextH;
+    const stepCtx = stepCanvas.getContext('2d');
+    if (!stepCtx) break;
+    stepCtx.imageSmoothingEnabled = true;
+    stepCtx.imageSmoothingQuality = 'high';
+    stepCtx.drawImage(currentCanvas, 0, 0, nextW, nextH);
+    currentCanvas = stepCanvas;
+    currentCtx = stepCtx;
+    curW = nextW;
+    curH = nextH;
+  }
+
+  // Final scale to exact target dimensions
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = targetSize;
+  finalCanvas.height = targetSize;
+  const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+  if (!finalCtx) return null;
+
+  finalCtx.imageSmoothingEnabled = true;
+  finalCtx.imageSmoothingQuality = 'high';
+  finalCtx.drawImage(currentCanvas, 0, 0, targetSize, targetSize);
+
+  // Apply subtle clarity sharpening filter for crisp facial features
+  applyClaritySharpening(finalCtx, targetSize, targetSize, 0.22);
+
+  return new Promise(resolve => {
+    finalCanvas.toBlob(resolve, 'image/jpeg', 0.95);
+  });
+}
+
+function triggerBrowserDownload(blob: Blob, filename: string): void {
+  const downloadUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = downloadUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(downloadUrl);
+  }, 400);
+}
+
+/**
+ * Download portrait image directly to the client's device in high resolution and high quality.
+ * Default is 800x800 HD portrait with multi-pass stepped upscaling and clarity enhancement.
+ */
+export async function downloadProfilePhoto(
+  url: string,
+  name: string,
+  targetSize: PhotoDownloadSize = 800
+): Promise<boolean> {
   const cleanName = (name || 'profile')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '_')
     .replace(/_+/g, '_')
     .slice(0, 45);
-  const filename = `${cleanName || 'profile'}_photo.jpg`;
 
-  // Strategy 1: Server proxy endpoint (same-origin, bypasses CORS, returns real image attachment)
+  const sizeLabel = targetSize === 'original' ? 'original' : `${targetSize}x${targetSize}_hd`;
+  const filename = `${cleanName || 'profile'}_${sizeLabel}_photo.jpg`;
+
+  // If Pravatar URL and high-res requested, fetch native uncompressed HD version directly
+  let fetchUrl = url;
+  if (targetSize !== 'original' && /i\.pravatar\.cc\/\d+/.test(url)) {
+    fetchUrl = url.replace(/i\.pravatar\.cc\/\d+/, `i.pravatar.cc/${targetSize}`);
+  }
+
+  // Strategy 1: Fetch through same-origin proxy /api/download-photo to bypass CORS
   try {
-    const proxyUrl = `/api/download-photo?url=${encodeURIComponent(url)}&name=${encodeURIComponent(cleanName)}`;
+    const sizeParam = targetSize === 'original' ? '' : `&size=${targetSize}`;
+    const proxyUrl = `/api/download-photo?url=${encodeURIComponent(fetchUrl)}&name=${encodeURIComponent(cleanName)}${sizeParam}`;
     const response = await fetch(proxyUrl);
+    
     if (response.ok) {
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      }, 300);
+
+      // If user requested original, download the raw blob directly
+      if (targetSize === 'original') {
+        triggerBrowserDownload(blob, filename);
+        return true;
+      }
+
+      // Upscale and sharpen the blob using client-side canvas
+      try {
+        let imageSource: CanvasImageSource | null = null;
+        let sWidth = 128;
+        let sHeight = 128;
+
+        if (typeof createImageBitmap === 'function') {
+          try {
+            const bmp = await createImageBitmap(blob);
+            imageSource = bmp;
+            sWidth = bmp.width;
+            sHeight = bmp.height;
+          } catch {
+            // Fallback to Image element
+          }
+        }
+
+        if (!imageSource) {
+          const objectUrl = URL.createObjectURL(blob);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = reject;
+            img.src = objectUrl;
+          });
+          imageSource = img;
+          sWidth = img.naturalWidth || 128;
+          sHeight = img.naturalHeight || 128;
+          URL.revokeObjectURL(objectUrl);
+        }
+
+        if (imageSource) {
+          const upscaledBlob = await upscaleImageToHighRes(imageSource, sWidth, sHeight, targetSize);
+          if (upscaledBlob) {
+            triggerBrowserDownload(upscaledBlob, filename);
+            return true;
+          }
+        }
+      } catch (procErr) {
+        console.warn('High-res canvas processing fallback to direct blob:', procErr);
+      }
+
+      // Fallback: download the fetched proxy blob
+      triggerBrowserDownload(blob, filename);
       return true;
     }
   } catch (err) {
-    console.warn('Server proxy photo download failed, trying browser-side strategies:', err);
+    console.warn('Proxy photo download failed, trying browser-side strategies:', err);
   }
 
   // Strategy 2: Direct blob fetch
   try {
-    const response = await fetch(url, { mode: 'cors' });
+    const response = await fetch(fetchUrl, { mode: 'cors' });
     if (response.ok) {
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      }, 300);
+
+      if (targetSize === 'original') {
+        triggerBrowserDownload(blob, filename);
+        return true;
+      }
+
+      try {
+        const objectUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = reject;
+          img.src = objectUrl;
+        });
+        const upscaledBlob = await upscaleImageToHighRes(
+          img, 
+          img.naturalWidth || 128, 
+          img.naturalHeight || 128, 
+          targetSize
+        );
+        URL.revokeObjectURL(objectUrl);
+        if (upscaledBlob) {
+          triggerBrowserDownload(upscaledBlob, filename);
+          return true;
+        }
+      } catch (e) {
+        console.warn('Direct fetch upscale fallback:', e);
+      }
+
+      triggerBrowserDownload(blob, filename);
       return true;
     }
   } catch (e) {
     console.warn('Direct fetch photo download failed, trying canvas conversion:', e);
   }
 
-  // Strategy 3: Canvas toDataURL / toBlob fallback
+  // Strategy 3: Direct browser navigation to proxy download endpoint as last resort
   try {
-    const canvasSuccess = await new Promise<boolean>((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || 256;
-          canvas.height = img.naturalHeight || 256;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(blobUrl);
-                }, 300);
-                resolve(true);
-              } else {
-                resolve(false);
-              }
-            }, 'image/jpeg', 0.95);
-            return;
-          }
-        } catch {
-          // Canvas tainted
-        }
-        resolve(false);
-      };
-      img.onerror = () => resolve(false);
-      img.src = url;
-    });
-
-    if (canvasSuccess) return true;
-  } catch (e) {
-    console.warn('Canvas photo conversion failed:', e);
-  }
-
-  // Strategy 4: Direct browser navigation to proxy download endpoint (forces browser attachment download)
-  try {
+    const sizeParam = targetSize === 'original' ? '' : `&size=${targetSize}`;
     const a = document.createElement('a');
-    a.href = `/api/download-photo?url=${encodeURIComponent(url)}&name=${encodeURIComponent(cleanName)}`;
+    a.href = `/api/download-photo?url=${encodeURIComponent(fetchUrl)}&name=${encodeURIComponent(cleanName)}${sizeParam}`;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
